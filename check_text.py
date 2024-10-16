@@ -41,73 +41,53 @@ def compute_edit_distance(candidate_texts, reference_texts):
     return average_distance
 
 
-def parse_text_into_versions(text):
+def parse_line_into_versions(line):
     """
-    Parse the text with <ERR> tags and return two versions: one with errors and one with corrections.
+    Parse a line with <ERR> tags and return two versions: one with errors and one with corrections.
 
-    :param text: Input text containing <ERR> tags with target and incorrect words.
-    :return: A tuple containing two versions: (text_with_errors, text_with_corrections).
+    :param line: Input line containing <ERR> tags with target and incorrect words.
+    :return: A tuple containing two versions: (line_with_errors, line_with_corrections).
     """
     err_pattern = re.compile(r'<ERR targ=([^>]+)> ([^<]+) </ERR>')
-    text_with_errors = text
-    text_with_corrections = text
+    line_with_errors = line
+    line_with_corrections = line
 
-    for match in err_pattern.finditer(text):
+    for match in err_pattern.finditer(line):
         correct_word_target = match.group(1)  # The correct word in the targ attribute
         incorrect_word = match.group(2)  # The actual incorrect word
 
         # Replace in the error version (remove <ERR> tags and leave the incorrect word)
-        text_with_errors = text_with_errors.replace(match.group(0), incorrect_word)
-        # Replace in the correction version (replace incorrect word with the correct word)
-        text_with_corrections = text_with_corrections.replace(match.group(0), correct_word_target)
+        line_with_errors = line_with_errors.replace(match.group(0), incorrect_word)
+        # Replace in the correction version (replace the entire <ERR> tag with the correct word)
+        line_with_corrections = line_with_corrections.replace(match.group(0), correct_word_target)
 
-    return text_with_errors, text_with_corrections
+    # Remove any remaining <ERR> tags (if any)
+    line_with_errors = re.sub(r'</?ERR[^>]*>', '', line_with_errors)
+    line_with_corrections = re.sub(r'</?ERR[^>]*>', '', line_with_corrections)
 
-
-def clean_and_split_file(file_content):
-    """
-    Clean the file content by removing lines that contain only a number with a dot and the following line,
-    then split the text by blank lines.
-
-    :param file_content: The entire text content of the file.
-    :return: A list of articles/paragraphs split by blank lines.
-    """
-    lines = file_content.split('\n')
-    cleaned_lines = []
-    skip_next_line = False
-
-    for i, line in enumerate(lines):
-        if skip_next_line:
-            skip_next_line = False
-            continue
-
-        if re.match(r'^\d+\.$', line.strip()):  # Matches lines that are numbers with a dot
-            skip_next_line = True  # Mark the next line to be skipped
-        else:
-            cleaned_lines.append(line)
-
-    cleaned_text = "\n".join(cleaned_lines)
-    articles = [article.strip() for article in cleaned_text.split('\n\n') if article.strip()]
-
-    return articles
+    return line_with_errors.strip(), line_with_corrections.strip()
 
 
 def process_file_into_versions(file_content):
     """
-    Process the cleaned and split file into two lists: one with errors and one with corrections.
+    Process the file content line by line and return lists of sentences with errors and corrections.
 
     :param file_content: The entire text content of the file.
     :return: Two lists: (list_with_errors, list_with_corrections).
     """
-    articles = clean_and_split_file(file_content)
+    lines = file_content.strip().split('\n')
 
     list_with_errors = []
     list_with_corrections = []
 
-    for article in articles:
-        text_with_errors, text_with_corrections = parse_text_into_versions(article)
-        list_with_errors.append(text_with_errors)
-        list_with_corrections.append(text_with_corrections)
+    for line in lines:
+        line = line.strip()
+
+        if '<ERR' in line:
+            # Process lines that contain <ERR> tags
+            line_with_errors, line_with_corrections = parse_line_into_versions(line)
+            list_with_errors.append(line_with_errors)
+            list_with_corrections.append(line_with_corrections)
 
     return list_with_errors, list_with_corrections
 
