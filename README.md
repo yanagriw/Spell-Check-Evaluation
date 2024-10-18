@@ -4,11 +4,9 @@ The goal of this project is to develop a **language model for context-based spel
 
 The result is a **fine-tuned T5 language model** trained on a **synthetically generated dataset** tailored for our specific task.
 
-Example:
-
 **Original:** *I wos in Franse lasst yer.*
 
-**Corrected:** *I was in France last year.*
+**Corrected with fine-tuned T5 model:** *I was in France last year.*
 
 # Datasets
 
