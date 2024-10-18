@@ -11,19 +11,109 @@ from transformers import T5Tokenizer, T5ForConditionalGeneration
 tool = language_tool_python.LanguageTool('en-US')
 
 
-def load_t5_model(model_path='t5_spell_corrector'):
+def load_t5_model():
     """
     Load the fine-tuned T5 model and tokenizer.
 
     :param model_path: Path to the saved T5 model.
     :return: Loaded model, tokenizer, and device.
     """
-    tokenizer = T5Tokenizer.from_pretrained(model_path)
-    model = T5ForConditionalGeneration.from_pretrained(model_path)
+    tokenizer = T5Tokenizer.from_pretrained("yanagriw/T5-spell-checker")
+    model = T5ForConditionalGeneration.from_pretrained("yanagriw/T5-spell-checker")
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     model.to(device)
     return model, tokenizer, device
 
+
+def compute_bleu(candidate_texts, reference_texts):
+    """
+    Compute BLEU score between the candidate texts and reference texts.
+
+    :param candidate_texts: List of corrected texts
+    :param reference_texts: List of reference texts (ground truth)
+    :return: BLEU score
+    """
+    bleu = sacrebleu.corpus_bleu([text.lower()[:500] for text in candidate_texts], [[text.lower()[:500] for text in reference_texts]])
+    return bleu.score
+
+
+def compute_edit_distance(candidate_texts, reference_texts):
+    """
+    Compute the average edit distance between the candidate texts and reference texts.
+
+    :param candidate_texts: List of corrected texts
+    :param reference_texts: List of reference texts (ground truth)
+    :return: Average edit distance
+    """
+    total_distance = 0
+    num_examples = len(candidate_texts)
+
+    for i in range(num_examples):
+        candidate = candidate_texts[i]
+        reference = reference_texts[i]
+        distance = nltk.edit_distance(candidate.lower()[:500], reference.lower()[:500])
+        total_distance += distance
+
+    average_distance = total_distance / num_examples
+    return average_distance
+
+
+def parse_sentence_into_versions(sentence):
+    """
+    Parse a sentence with <ERR> tags and return two versions: one with errors and one with corrections.
+
+    :param sentence: Input sentence containing <ERR> tags with target and incorrect words.
+    :return: A tuple containing two versions: (sentence_with_errors, sentence_with_corrections).
+    """
+    err_pattern = re.compile(r'<ERR targ=([^>]+)> ([^<]+) </ERR>')
+    sentence_with_errors = sentence
+    sentence_with_corrections = sentence
+
+    for match in err_pattern.finditer(sentence):
+        correct_word_target = match.group(1)
+        incorrect_word = match.group(2)
+
+        sentence_with_errors = sentence_with_errors.replace(match.group(0), incorrect_word)
+        sentence_with_corrections = sentence_with_corrections.replace(match.group(0), correct_word_target)
+
+    sentence_with_errors = re.sub(r'</?ERR[^>]*>', '', sentence_with_errors)
+    sentence_with_corrections = re.sub(r'</?ERR[^>]*>', '', sentence_with_corrections)
+
+    return sentence_with_errors.strip(), sentence_with_corrections.strip()
+
+def process_text_into_versions(file_content):
+    """
+    Process the file content by splitting it first by new lines and then by periods,
+    returning lists of sentences with errors and corrections.
+
+    :param file_content: The entire text content of the file.
+    :return: Two lists: (list_with_errors, list_with_corrections).
+    """
+    # Split the text by new lines
+    lines = file_content.strip().split('\n')
+
+    list_with_errors = []
+    list_with_corrections = []
+
+    for line in lines:
+        # Replace newline characters in the line with spaces
+        line = line.strip().replace('\n', ' ')
+
+        # Further split each line by period (.)
+        sentences = line.split('.')
+
+        for sentence in sentences:
+            sentence = sentence.strip()
+            if not sentence:
+                continue  # Skip empty sentences
+
+            if '<ERR' in sentence:
+                # Parse the sentence for error and correction versions
+                sentence_with_errors, sentence_with_corrections = parse_sentence_into_versions(sentence)
+                list_with_errors.append(sentence_with_errors)
+                list_with_corrections.append(sentence_with_corrections)
+
+    return list_with_errors, list_with_corrections
 
 def correct_with_t5(text, model, tokenizer, device):
     """
@@ -46,86 +136,6 @@ def correct_with_t5(text, model, tokenizer, device):
     # Decode the output
     corrected_text = tokenizer.decode(outputs[0], skip_special_tokens=True)
     return corrected_text
-
-
-def compute_bleu(candidate_texts, reference_texts):
-    """
-    Compute BLEU score between the candidate texts and reference texts.
-
-    :param candidate_texts: List of corrected texts
-    :param reference_texts: List of reference texts (ground truth)
-    :return: BLEU score
-    """
-    bleu = sacrebleu.corpus_bleu(candidate_texts, [reference_texts])
-    return bleu.score
-
-
-def compute_edit_distance(candidate_texts, reference_texts):
-    """
-    Compute the average edit distance between the candidate texts and reference texts.
-
-    :param candidate_texts: List of corrected texts
-    :param reference_texts: List of reference texts (ground truth)
-    :return: Average edit distance
-    """
-    total_distance = 0
-    num_examples = len(candidate_texts)
-
-    for i in range(num_examples):
-        candidate = candidate_texts[i]
-        reference = reference_texts[i]
-        distance = nltk.edit_distance(candidate, reference)
-        total_distance += distance
-
-    average_distance = total_distance / num_examples
-    return average_distance
-
-
-def parse_line_into_versions(line):
-    """
-    Parse a line with <ERR> tags and return two versions: one with errors and one with corrections.
-
-    :param line: Input line containing <ERR> tags with target and incorrect words.
-    :return: A tuple containing two versions: (line_with_errors, line_with_corrections).
-    """
-    err_pattern = re.compile(r'<ERR targ=([^>]+)> ([^<]+) </ERR>')
-    line_with_errors = line
-    line_with_corrections = line
-
-    for match in err_pattern.finditer(line):
-        correct_word_target = match.group(1)
-        incorrect_word = match.group(2)
-
-        line_with_errors = line_with_errors.replace(match.group(0), incorrect_word)
-        line_with_corrections = line_with_corrections.replace(match.group(0), correct_word_target)
-
-    line_with_errors = re.sub(r'</?ERR[^>]*>', '', line_with_errors)
-    line_with_corrections = re.sub(r'</?ERR[^>]*>', '', line_with_corrections)
-
-    return line_with_errors.strip(), line_with_corrections.strip()
-
-
-def process_file_into_versions(file_content):
-    """
-    Process the file content line by line and return lists of sentences with errors and corrections.
-
-    :param file_content: The entire text content of the file.
-    :return: Two lists: (list_with_errors, list_with_corrections).
-    """
-    lines = file_content.strip().split('\n')
-
-    list_with_errors = []
-    list_with_corrections = []
-
-    for line in lines:
-        line = line.strip()
-        if '<ERR' in line:
-            line_with_errors, line_with_corrections = parse_line_into_versions(line)
-            list_with_errors.append(line_with_errors)
-            list_with_corrections.append(line_with_corrections)
-
-    return list_with_errors, list_with_corrections
-
 
 def correct_with_textblob(text):
     """
@@ -215,7 +225,7 @@ def main():
         file_content = file.read()
 
     # Process the file to get error texts and reference corrections
-    errors_list, corrections_list = process_file_into_versions(file_content)
+    errors_list, corrections_list = process_text_into_versions(file_content)
 
     # Evaluate corrections and save the results
     evaluate_and_save_corrections(errors_list, corrections_list, model, tokenizer, device)

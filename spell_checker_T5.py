@@ -17,9 +17,8 @@ def correct_spelling(input_text, model, tokenizer, device):
 
 def main():
     # Load the fine-tuned model and tokenizer
-    model_path = 't5_spell_corrector'  # Path to the saved model
-    tokenizer = T5Tokenizer.from_pretrained(model_path)
-    model = T5ForConditionalGeneration.from_pretrained(model_path)
+    tokenizer = T5Tokenizer.from_pretrained("yanagriw/T5-spell-checker")
+    model = T5ForConditionalGeneration.from_pretrained("yanagriw/T5-spell-checker")
 
     # Move model to device
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
