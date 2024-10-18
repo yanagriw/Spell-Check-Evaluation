@@ -1,6 +1,16 @@
 from symspellpy.symspellpy import SymSpell, Verbosity
 import os
 import nltk
+import urllib.request
+
+def download_file(url, destination):
+    try:
+        urllib.request.urlretrieve(url, destination)
+        print(f"Downloaded {destination}")
+    except Exception as e:
+        print(f"Failed to download {destination}: {e}")
+        return False
+    return True
 
 def initialize_symspell(max_edit_distance_dictionary=2, prefix_length=7):
     """
@@ -13,11 +23,20 @@ def initialize_symspell(max_edit_distance_dictionary=2, prefix_length=7):
     sym_spell = SymSpell(max_edit_distance_dictionary, prefix_length)
 
     # Load the frequency dictionary
-    dictionary_path = os.path.join('data/frequency_dictionary_en_82_765.txt')  # Download this file from https://github.com/mammothb/symspellpy
-    if not sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1):
-        print("Dictionary file not found.")
-        return None
+    dictionary_path = os.path.join('data/frequency_dictionary_en_82_765.txt')
+    dictionary_url = 'https://github.com/mammothb/symspellpy/blob/master/symspellpy/frequency_dictionary_en_82_765.txt'
 
+    # Check if the dictionary file exists, otherwise download it
+    if not os.path.exists(dictionary_path):
+        os.makedirs(os.path.dirname(dictionary_path), exist_ok=True)
+        if not download_file(dictionary_url, dictionary_path):
+            print("Could not download the dictionary file.")
+            return None
+
+    # Load the dictionary
+    if not sym_spell.load_dictionary(dictionary_path, term_index=0, count_index=1):
+        print("Failed to load the dictionary.")
+        return None
     return sym_spell
 
 def check_word_symspell(word, sym_spell):
