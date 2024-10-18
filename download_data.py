@@ -28,18 +28,15 @@ def download_file(url, save_path):
 def main():
     # URLs to download
     url1 = "https://www.dcs.bbk.ac.uk/~roger/missp.dat"
-    url2 = "https://www.dcs.bbk.ac.uk/~roger/aspell.dat"
-    url3 = "https://www.dcs.bbk.ac.uk/~roger/holbrook-tagged.dat"
+    url2 = "https://www.dcs.bbk.ac.uk/~roger/holbrook-tagged.dat"
 
     # File save paths
     save_path1 = "data/birkbeck.dat"
-    save_path2 = "data/aspell.dat"
-    save_path3 = "data/holbrook.dat"
+    save_path2 = "data/holbrook.dat"
 
     # Download files only if they don't exist
     download_file(url1, save_path1)
     download_file(url2, save_path2)
-    download_file(url3, save_path3)
 
 if __name__ == "__main__":
     main()
