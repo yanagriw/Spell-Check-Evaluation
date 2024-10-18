@@ -1,8 +1,8 @@
 # Introduction
 
-The goal of this project is to develop a language model for context-based spelling correction and compare its performance with well-known Python libraries such as SymSpell, LanguageTool, and TextBlob.
+The goal of this project is to develop a **language model for context-based spelling correction** and compare its performance with well-known Python libraries such as SymSpell, LanguageTool, and TextBlob.
 
-The result is a fine-tuned T5 language model trained on a synthetically generated dataset tailored for our specific task.
+The result is a **fine-tuned T5 language model** trained on a **synthetically generated dataset** tailored for our specific task.
 
 # Datasets
 
@@ -62,7 +62,7 @@ The tool selects a word closest to the input based on edit distance, but in cont
 
 ## Fine-Tuning the T5 Language Model
 
-To achieve better spelling correction that accounts for context, we fine-tuned the T5 (Text-to-Text Transfer Transformer) language model.
+To achieve better spelling correction that accounts for context, we fine-tuned the **T5 (Text-to-Text Transfer Transformer)** language model.
 
 ### About T5
 
@@ -99,6 +99,14 @@ BLEU is a metric for evaluating the quality of text which has been machine-trans
 - **TextBlob** - BLEU: 69.11
 - **LanguageTool** - BLEU: 73.68
 - **T5 Model** - BLEU: 77.64
+
+### About LanguageTool
+
+`language_tool_python` is a Python wrapper for LanguageTool, an open-source proofreading software. It provides grammar, style, and spell checking, and can detect complex errors by considering the context of words within a sentence.
+
+### About TextBlob
+
+TextBlob is a Python library for processing textual data. It offers simple APIs for common NLP tasks such as part-of-speech tagging, noun phrase extraction, sentiment analysis, classification, and spelling correction. Its spell checker uses a probabilistic approach at the word level.
 
 # Results
 
