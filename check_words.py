@@ -90,7 +90,7 @@ def main():
 
     if sym_spell:
         # Path to the input file
-        file_path = 'data/aspell.dat'
+        file_path = 'data/birkbeck.dat'
 
         check_words_in_file(file_path, sym_spell)
 
