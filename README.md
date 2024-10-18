@@ -62,13 +62,13 @@ The tool selects a word closest to the input based on edit distance, but in cont
 
 ## Fine-Tuning the T5 Language Model
 
-To achieve better spelling correction that accounts for context, we fine-tuned the **T5 (Text-to-Text Transfer Transformer)** language model.
+To achieve **better spelling correction** that accounts for context, we fine-tuned the **T5 (Text-to-Text Transfer Transformer)** language model.
 
 ### About T5
 
 T5 is a transformer-based language model developed by Google. It treats every NLP problem as a text-to-text task, enabling it to be fine-tuned for various applications like translation, summarization, and text correction.
 
-By framing spelling correction as a text-to-text problem, we input sentences with errors and train the model to output the corrected sentences, leveraging contextual information.
+By framing spelling correction as a text-to-text problem, we input sentences with errors and train the model to output the corrected sentences, **leveraging contextual information**.
 
 ### Training the Model
 
@@ -85,6 +85,14 @@ The trained model is available on Hugging Face for convenient use:
 ## Testing the Model
 
 To directly test the model, run the script `spell_checker_T5.py`. Enter text with spelling errors into the console and press **Enter**. To exit, type `stop` and press **Enter**.
+
+## Examples
+
+- **Original:** I coudnt go to sleap becuz the dog was barkin all nite.
+- **Corrected:** I could not go to sleep because the dog was barking all night.
+
+- **Original:** I tryed to bild a sandcastle but the wavs kept knockin it down.
+- **Corrected:** I tried to build a sandcastle but the waves kept knocking it down.
 
 ## Performance Evaluation
 
