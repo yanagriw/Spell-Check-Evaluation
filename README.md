@@ -88,11 +88,11 @@ To directly test the model, run the script `spell_checker_T5.py`. Enter text wit
 
 ## Examples
 
-- **Original:** I coudnt go to sleap becuz the dog was barkin all nite.
-- **Corrected:** I could not go to sleep because the dog was barking all night.
+- **Original:** *I coudnt go to sleap becuz the dog was barkin all nite.*
+- **Corrected:** *I could not go to sleep because the dog was barking all night.*
 
-- **Original:** I tryed to bild a sandcastle but the wavs kept knockin it down.
-- **Corrected:** I tried to build a sandcastle but the waves kept knocking it down.
+- **Original:** *I tryed to bild a sandcastle but the wavs kept knockin it down.*
+- **Corrected:** *I tried to build a sandcastle but the waves kept knocking it down.*
 
 ## Performance Evaluation
 
